@@ -5,21 +5,18 @@ include std/filesys.e
 include std/error.e
 include std/os.e
 include std/convert.e
-include lib/_common_.e
-include lib/_debug_.e
-include lib/_file_.e
-include lib/_sequence_.e
-include lib/_conv_.e
+include std/sequence.e
+include common.e
 include win32lib_r2.ew
-include "xlsxwriter.e"
+include xlsxwriter.e
 
 constant
   resourceDir = InitialDir & "icons"
 
 constant
   APPL = "Dir Size",
-  VERS = "9.0",
-  YEAR = "2017"
+  VERS = "9.1",
+  YEAR = "2023"
 
 sequence ov
 
@@ -72,6 +69,39 @@ function formatNb(atom bytes) -- Returns formatted size
   return sprintf("%d bytes", bytes)
 end function
 
+------------------------------------------------------------------------------
+
+--converts an ASCII character to its unicode equivalent
+function unicode(integer c)
+  sequence bits, u8
+
+    if c >= 65536 then     -- 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
+      bits = reverse(int_to_bits(c,21))
+      u8 = {{1,1,1,1,0}&bits[1..3],{1,0}&bits[4..9],{1,0}&bits[10..15],{1,0}&bits[16..21]}
+      return bits_to_int(reverse(u8[1]))&bits_to_int(reverse(u8[2]))&bits_to_int(reverse(u8[3]))&bits_to_int(reverse(u8[4]))
+   elsif c >= 2048 then  -- 1110xxxx 10xxxxxx 10xxxxxx
+      bits = reverse(int_to_bits(c,16))
+      u8 = {{1,1,1,0}&bits[1..4],{1,0}&bits[5..10],{1,0}&bits[11..16]}
+      return bits_to_int(reverse(u8[1]))&bits_to_int(reverse(u8[2]))&bits_to_int(reverse(u8[3]))
+    elsif c >= 128 then   -- 110xxxxx 10xxxxxx
+      bits = reverse(int_to_bits(c,11))
+      u8 = {{1,1,0}&bits[1..5],{1,0}&bits[6..11]}
+      return bits_to_int(reverse(u8[1]))&bits_to_int(reverse(u8[2]))
+    else                -- 0xxxxxxx
+      return {c}
+    end if
+end function
+
+------------------------------------------------------------------------------
+
+--converts an ASCII string to an UTF-8 string
+function ascii_to_utf8(sequence s)
+  sequence res = ""
+  for i = 1 to length(s) do
+    res &= unicode(s[i])
+  end for
+  return res
+end function
 ------------------------------------------------------------------------------
 
 function dirsize(sequence parent, sequence rootdir)

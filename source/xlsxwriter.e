@@ -33,19 +33,6 @@ constant
 	C_INT32		= C_INT,
 $
 
-ifdef MEMSTRUCT then
-	
-	memtype
-		object		   as void,
-		unsigned int   as lxw_row_t,
-		unsigned short as lxw_col_t,
-		unsigned char  as uint8_t,
-		unsigned short as uint16_t,
-		unsigned int   as uint32_t,
-	$
-	
-end ifdef
-
 constant
 	_format_set_align					= define_c_proc( libxlsxwriter, "+format_set_align", {C_POINTER,C_UINT8} ),
 	_format_set_bg_color				= define_c_proc( libxlsxwriter, "+format_set_bg_color", {C_POINTER,C_INT32} ),
@@ -171,308 +158,139 @@ public enum type lxw_close_error
 	
 end type
 
-ifdef MEMSTRUCT then
+ifdef BITS64 then
 	
-	public memstruct stailq_head
-		pointer void stqh_first	/* first element */
-		pointer void stqh_last	/* addr of last next element */
-	end memstruct
-	
-	public memstruct stailq_entry
-		pointer void stqe_next	/* next element */
-	end memstruct
-	
-	/**
-	* Struct to represent a date and time in Excel.
-	*/
-	public memstruct lxw_datetime
-		
-		int year	/* Year		: 1900 - 9999	 */
-		int month	/* Month	:	 1 - 12		 */
-		int day		/* Day		:	 1 - 31		 */
-		int hour	/* Hour		:	 0 - 23		 */
-		int min		/* Minute	:	 0 - 59		 */
-		double sec	/* Seconds	:	 0 - 59.999	 */
-		
-	end memstruct
-	
-	public constant
-		SIZEOF_LXW_DATETIME = sizeof( lxw_datetime )
-	
-	/**
-	* Struct to represent an Excel workbook.
-	*/
-	public memstruct lxw_workbook
-		
-		pointer void file
-		pointer void worksheets
-		pointer void formats
-		pointer void defined_names
-		pointer void sst
-		pointer void properties
-		pointer char filename
-		pointer void options
-		
-		uint16_t num_sheets
-		uint16_t first_sheet
-		uint32_t active_sheet
-		uint16_t num_xf_formats
-		uint16_t num_format_count
-		
-		uint16_t font_count
-		uint16_t border_count
-		uint16_t fill_count
-		uint8_t optimize
-		
-		pointer void used_xf_formats
-		
-	end memstruct
-	
-	/**
-	* Optional parameters when creating a new Workbook object via new_workbook_opt().
-	*/
-	public memstruct lxw_workbook_options
-		uint8_t constant_memory
-	end memstruct
-	
-	/**
-	* Struct to represent an Excel worksheet.
-	*/
-	public memstruct lxw_worksheet
-		
-		pointer void file
-		pointer void optimize_tmpfile
-		pointer void table
-		pointer void hyperlinks
-		pointer void array
-		pointer void merged_ranges
-		
-		lxw_row_t dim_rowmin
-		lxw_row_t dim_rowmax
-		lxw_col_t dim_colmin
-		lxw_col_t dim_colmax
-		
-		pointer void sst
-		pointer char name
-		pointer char quoted_name
-		
-		uint32_t index
-		uint8_t active
-		uint8_t selected
-		uint8_t hidden
-		pointer void active_sheet
-		
-		pointer void col_options
-		uint16_t col_options_max
-		
-		pointer void col_sizes
-		uint16_t col_sizes_max
-		
-		pointer void col_formats
-		uint16_t col_formats_max
-		
-		uint8_t col_size_changed
-		uint8_t optimize
-		pointer void optimize_row
-		
-		uint16_t fit_height
-		uint16_t fit_width
-		uint16_t horizontal_dpi
-		uint16_t hlink_count
-		uint16_t page_start
-		uint16_t print_scale
-		uint16_t rel_count
-		uint16_t vertical_dpi
-		uint8_t filter_on
-		uint8_t fit_page
-		uint8_t hcenter
-		uint8_t orientation
-		uint8_t outline_changed
-		uint8_t page_order
-		uint8_t page_setup_changed
-		uint8_t page_view
-		uint8_t paper_size
-		uint8_t print_gridlines
-		uint8_t print_headers
-		uint8_t print_options_changed
-		uint8_t screen_gridlines
-		uint8_t tab_color
-		uint8_t vba_codename
-		uint8_t vcenter
-		
-		double margin_left
-		double margin_right
-		double margin_top
-		double margin_bottom
-		double margin_header
-		double margin_footer
-		
-		uint8_t header_footer_changed
-		char header[LXW_HEADER_FOOTER_MAX]
-		char footer[LXW_HEADER_FOOTER_MAX]
-		
-		lxw_repeat_rows repeat_rows
-		lxw_repeat_cols repeat_cols
-		lxw_print_area print_area
-		lxw_autofilter autofilter
-		
-		uint16_t merged_range_count
-		
-		pointer void hbreaks
-		pointer void vbreaks
-		pointer void external_hyperlinks
-		
-		stailq_entry list_pointers
-		
-	end memstruct
-	
-	/**
-	* Define the queue.h structs for the workbook lists.
-	*/
-	public memstruct lxw_worksheets
-		
-		pointer void stqh_first	/* first element */
-		pointer void stqh_last	/* addr of last next element */
-		
-	end memstruct
-	
-elsedef
-	
-	ifdef BITS64 then
-		
-		include std/error.e
-		error:crash( "64-bit currentl not supported" )
-		
-	end ifdef
-	
-	public constant
-		stqh_first			= 0,	/* first element */
-		stqh_last			= 4,	/* addr of last next element */
-		SIZEOF_STAILQ_HEAD	= 8,
-	$
-	
-	public constant
-		stqe_next			= 0,	/* next element */
-		SIZEOF_STAILQ_ENTRY	= 4,
-	$
-	
-	public constant
-		lxw_datetime__year		=  0, -- int
-		lxw_datetime__month		=  4, -- int
-		lxw_datetime__day		=  8, -- int
-		lxw_datetime__hour		= 12, -- int
-		lxw_datetime__min		= 16, -- int
-		lxw_datetime__sec		= 20, -- double
-		SIZEOF_LXW_DATETIME		= 32,
-	$
-	
-	public constant
-		lxw_workbook_options__constant_memory	= 0, -- uint8_t
-		SIZEOF_LXW_WORKBOOK_OPTIONS				= 1,
-	$
-	
-	public constant
-		lxw_workbook__file						=	0, -- FILE*
-		lxw_workbook__worksheets				=	4, -- lxw_worksheets*
-		lxw_workbook__formats					=	8, -- lxw_formats*
-		lxw_workbook__defined_names				=  12, -- lxw_defined_names*
-		lxw_workbook__sst						=  16, -- lxw_sst*
-		lxw_workbook__properties				=  20, -- lxw_properties*
-		lxw_workbook__filename					=  24, -- const char*
-		lxw_workbook__options					=  28, -- lxw_workbook_options*
-		lxw_workbook__num_sheets				=  30, -- uint16_t
-		lxw_workbook__first_sheet				=  32, -- uint16_t
-		lxw_workbook__active_sheet				=  36, -- uint32_t
-		lxw_workbook__num_xf_formats			=  40, -- uint16_t
-		lxw_workbook__num_format_count			=  42, -- uint16_t
-		lxw_workbook__font_count				=  44, -- uint16_t
-		lxw_workbook__border_count				=  46, -- uint16_t
-		lxw_workbook__fill_count				=  48, -- uint16_t
-		lxw_workbook__optimize					=  50, -- uint8_t
-		lxw_workbook__used_xf_formats			=  52, -- lxw_hash_table*
-		SIZEOF_LXW_WORKBOOK						=  56,
-	$
-	
-	public constant
-		lxw_worksheet__file						=	0, -- FILE *
-		lxw_worksheet__optimize_tmpfile			=	4, -- FILE *
-		lxw_worksheet__table					=	8, -- lxw_table_rows *
-		lxw_worksheet__hyperlinks				=  12, -- lxw_table_rows *
-		lxw_worksheet__array					=  16, -- lxw_cell**
-		lxw_worksheet__merged_ranges			=  20, -- lxw_merged_ranges*
-		lxw_worksheet__dim_rowmin				=  24, -- lxw_row_t
-		lxw_worksheet__dim_rowmax				=  28, -- lxw_row_t
-		lxw_worksheet__dim_colmin				=  32, -- lxw_col_t
-		lxw_worksheet__dim_colmax				=  34, -- lxw_col_t
-		lxw_worksheet__sst						=  36, -- lxw_sst*
-		lxw_worksheet__name						=  40, -- char*
-		lxw_worksheet__quoted_name				=  44, -- char*
-		lxw_worksheet__index					=  48, -- uint32_t
-		lxw_worksheet__active					=  52, -- uint8_t
-		lxw_worksheet__selected					=  53, -- uint8_t
-		lxw_worksheet__hidden					=  54, -- uint8_t
-		lxw_worksheet__active_sheet				=  56, -- uint32_t
-		lxw_worksheet__col_options				=  60, -- lxw_col_options**
-		lxw_worksheet__col_options_max			=  64, -- uint16_t
-		lxw_worksheet__col_sizes				=  68, -- double*
-		lxw_worksheet__col_sizes_max			=  72, -- uint16_t
-		lxw_worksheet__col_formats				=  76, -- lxw_format**
-		lxw_worksheet__col_formats_max			=  80, -- uint16_t
-		lxw_worksheet__col_size_changed			=  82, -- uint8_t
-		lxw_worksheet__optimize					=  83, -- uint8_t
-		lxw_worksheet__optimize_row				=  84, -- lxw_row*
-		lxw_worksheet__fit_width				=  90, -- uint16_t
-		lxw_worksheet__fit_height				=  88, -- uint16_t
-		lxw_worksheet__horizontal_dpi			=  92, -- uint16_t
-		lxw_worksheet__hlink_count				=  94, -- uint16_t
-		lxw_worksheet__page_start				=  96, -- uint16_t
-		lxw_worksheet__print_scale				=  98, -- uint16_t
-		lxw_worksheet__rel_count				= 100, -- uint16_t
-		lxw_worksheet__vertical_dpi				= 102, -- uint16_t
-		lxw_worksheet__filter_on				= 104, -- uint8_t
-		lxw_worksheet__fit_page					= 105, -- uint8_t
-		lxw_worksheet__hcenter					= 106, -- uint8_t
-		lxw_worksheet__orientation				= 107, -- uint8_t
-		lxw_worksheet__outline_changed			= 108, -- uint8_t
-		lxw_worksheet__page_order				= 109, -- uint8_t
-		lxw_worksheet__page_setup_changed		= 110, -- uint8_t
-		lxw_worksheet__page_view				= 111, -- uint8_t
-		lxw_worksheet__paper_size				= 112, -- uint8_t
-		lxw_worksheet__print_gridlines			= 113, -- uint8_t
-		lxw_worksheet__print_headers			= 114, -- uint8_t
-		lxw_worksheet__print_options_changed	= 115, -- uint8_t
-		lxw_worksheet__screen_gridlines			= 116, -- uint8_t
-		lxw_worksheet__tab_color				= 117, -- uint8_t
-		lxw_worksheet__vba_codename				= 118, -- uint8_t
-		lxw_worksheet__vcenter					= 119, -- uint8_t
-		lxw_worksheet__margin_left				= 120, -- double
-		lxw_worksheet__margin_right				= 128, -- double
-		lxw_worksheet__margin_top				= 136, -- double
-		lxw_worksheet__margin_bottom			= 144, -- double
-		lxw_worksheet__margin_header			= 152, -- double
-		lxw_worksheet__margin_footer			= 160, -- double
-		lxw_worksheet__header_footer_changed	= 168, -- uint8_t
-		lxw_worksheet__header					= 169, -- char[LXW_HEADER_FOOTER_MAX]
-		lxw_worksheet__footer					= 424, -- char[LXW_HEADER_FOOTER_MAX]
-		lxw_worksheet__repeat_rows				= 680, -- lxw_repeat_rows
-		lxw_worksheet__repeat_cols				= 692, -- lxw_repeat_cols
-		lxw_worksheet__print_area				= 700, -- lxw_print_area
-		lxw_worksheet__autofilter				= 716, -- lxw_autofilter
-		lxw_worksheet__merged_range_count		= 732, -- uint16_t
-		lxw_worksheet__hbreaks					= 736, -- lxw_row_t*
-		lxw_worksheet__vbreaks					= 740, -- lxw_col_t*
-		lxw_worksheet__external_hyperlinks		= 744, -- lxw_rel_tuples*
-		lxw_worksheet__list_pointers			= 748, -- lxw_worksheet*
-		SIZEOF_LXW_WORKSHEET					= 752,
-	$
-	
-	public constant
-		lxw_worksheets__stqh_first	= 0, -- pointer
-		lxw_worksheets__stqh_last	= 4, -- pointer
-		SIZEOF_LXW_WORKSHEETS		= 8,
-	$
+	include std/error.e
+	error:crash( "64-bit currentl not supported" )
 	
 end ifdef
+
+public constant
+	stqh_first			= 0,	/* first element */
+	stqh_last			= 4,	/* addr of last next element */
+	SIZEOF_STAILQ_HEAD	= 8,
+$
+
+public constant
+	stqe_next			= 0,	/* next element */
+	SIZEOF_STAILQ_ENTRY	= 4,
+$
+
+public constant
+	lxw_datetime__year		=  0, -- int
+	lxw_datetime__month		=  4, -- int
+	lxw_datetime__day		=  8, -- int
+	lxw_datetime__hour		= 12, -- int
+	lxw_datetime__min		= 16, -- int
+	lxw_datetime__sec		= 20, -- double
+	SIZEOF_LXW_DATETIME		= 32,
+$
+
+public constant
+	lxw_workbook_options__constant_memory	= 0, -- uint8_t
+	SIZEOF_LXW_WORKBOOK_OPTIONS				= 1,
+$
+
+public constant
+	lxw_workbook__file						=	0, -- FILE*
+	lxw_workbook__worksheets				=	4, -- lxw_worksheets*
+	lxw_workbook__formats					=	8, -- lxw_formats*
+	lxw_workbook__defined_names				=  12, -- lxw_defined_names*
+	lxw_workbook__sst						=  16, -- lxw_sst*
+	lxw_workbook__properties				=  20, -- lxw_properties*
+	lxw_workbook__filename					=  24, -- const char*
+	lxw_workbook__options					=  28, -- lxw_workbook_options*
+	lxw_workbook__num_sheets				=  30, -- uint16_t
+	lxw_workbook__first_sheet				=  32, -- uint16_t
+	lxw_workbook__active_sheet				=  36, -- uint32_t
+	lxw_workbook__num_xf_formats			=  40, -- uint16_t
+	lxw_workbook__num_format_count			=  42, -- uint16_t
+	lxw_workbook__font_count				=  44, -- uint16_t
+	lxw_workbook__border_count				=  46, -- uint16_t
+	lxw_workbook__fill_count				=  48, -- uint16_t
+	lxw_workbook__optimize					=  50, -- uint8_t
+	lxw_workbook__used_xf_formats			=  52, -- lxw_hash_table*
+	SIZEOF_LXW_WORKBOOK						=  56,
+$
+
+public constant
+	lxw_worksheet__file						=	0, -- FILE *
+	lxw_worksheet__optimize_tmpfile			=	4, -- FILE *
+	lxw_worksheet__table					=	8, -- lxw_table_rows *
+	lxw_worksheet__hyperlinks				=  12, -- lxw_table_rows *
+	lxw_worksheet__array					=  16, -- lxw_cell**
+	lxw_worksheet__merged_ranges			=  20, -- lxw_merged_ranges*
+	lxw_worksheet__dim_rowmin				=  24, -- lxw_row_t
+	lxw_worksheet__dim_rowmax				=  28, -- lxw_row_t
+	lxw_worksheet__dim_colmin				=  32, -- lxw_col_t
+	lxw_worksheet__dim_colmax				=  34, -- lxw_col_t
+	lxw_worksheet__sst						=  36, -- lxw_sst*
+	lxw_worksheet__name						=  40, -- char*
+	lxw_worksheet__quoted_name				=  44, -- char*
+	lxw_worksheet__index					=  48, -- uint32_t
+	lxw_worksheet__active					=  52, -- uint8_t
+	lxw_worksheet__selected					=  53, -- uint8_t
+	lxw_worksheet__hidden					=  54, -- uint8_t
+	lxw_worksheet__active_sheet				=  56, -- uint32_t
+	lxw_worksheet__col_options				=  60, -- lxw_col_options**
+	lxw_worksheet__col_options_max			=  64, -- uint16_t
+	lxw_worksheet__col_sizes				=  68, -- double*
+	lxw_worksheet__col_sizes_max			=  72, -- uint16_t
+	lxw_worksheet__col_formats				=  76, -- lxw_format**
+	lxw_worksheet__col_formats_max			=  80, -- uint16_t
+	lxw_worksheet__col_size_changed			=  82, -- uint8_t
+	lxw_worksheet__optimize					=  83, -- uint8_t
+	lxw_worksheet__optimize_row				=  84, -- lxw_row*
+	lxw_worksheet__fit_width				=  90, -- uint16_t
+	lxw_worksheet__fit_height				=  88, -- uint16_t
+	lxw_worksheet__horizontal_dpi			=  92, -- uint16_t
+	lxw_worksheet__hlink_count				=  94, -- uint16_t
+	lxw_worksheet__page_start				=  96, -- uint16_t
+	lxw_worksheet__print_scale				=  98, -- uint16_t
+	lxw_worksheet__rel_count				= 100, -- uint16_t
+	lxw_worksheet__vertical_dpi				= 102, -- uint16_t
+	lxw_worksheet__filter_on				= 104, -- uint8_t
+	lxw_worksheet__fit_page					= 105, -- uint8_t
+	lxw_worksheet__hcenter					= 106, -- uint8_t
+	lxw_worksheet__orientation				= 107, -- uint8_t
+	lxw_worksheet__outline_changed			= 108, -- uint8_t
+	lxw_worksheet__page_order				= 109, -- uint8_t
+	lxw_worksheet__page_setup_changed		= 110, -- uint8_t
+	lxw_worksheet__page_view				= 111, -- uint8_t
+	lxw_worksheet__paper_size				= 112, -- uint8_t
+	lxw_worksheet__print_gridlines			= 113, -- uint8_t
+	lxw_worksheet__print_headers			= 114, -- uint8_t
+	lxw_worksheet__print_options_changed	= 115, -- uint8_t
+	lxw_worksheet__screen_gridlines			= 116, -- uint8_t
+	lxw_worksheet__tab_color				= 117, -- uint8_t
+	lxw_worksheet__vba_codename				= 118, -- uint8_t
+	lxw_worksheet__vcenter					= 119, -- uint8_t
+	lxw_worksheet__margin_left				= 120, -- double
+	lxw_worksheet__margin_right				= 128, -- double
+	lxw_worksheet__margin_top				= 136, -- double
+	lxw_worksheet__margin_bottom			= 144, -- double
+	lxw_worksheet__margin_header			= 152, -- double
+	lxw_worksheet__margin_footer			= 160, -- double
+	lxw_worksheet__header_footer_changed	= 168, -- uint8_t
+	lxw_worksheet__header					= 169, -- char[LXW_HEADER_FOOTER_MAX]
+	lxw_worksheet__footer					= 424, -- char[LXW_HEADER_FOOTER_MAX]
+	lxw_worksheet__repeat_rows				= 680, -- lxw_repeat_rows
+	lxw_worksheet__repeat_cols				= 692, -- lxw_repeat_cols
+	lxw_worksheet__print_area				= 700, -- lxw_print_area
+	lxw_worksheet__autofilter				= 716, -- lxw_autofilter
+	lxw_worksheet__merged_range_count		= 732, -- uint16_t
+	lxw_worksheet__hbreaks					= 736, -- lxw_row_t*
+	lxw_worksheet__vbreaks					= 740, -- lxw_col_t*
+	lxw_worksheet__external_hyperlinks		= 744, -- lxw_rel_tuples*
+	lxw_worksheet__list_pointers			= 748, -- lxw_worksheet*
+	SIZEOF_LXW_WORKSHEET					= 752,
+$
+
+public constant
+	lxw_worksheets__stqh_first	= 0, -- pointer
+	lxw_worksheets__stqh_last	= 4, -- pointer
+	SIZEOF_LXW_WORKSHEETS		= 8,
+$
 
 /**
  * Error codes from `worksheet_write*()` functions.
@@ -800,25 +618,18 @@ public function allocate_datetime( sequence datetime, atom cleanup = 0 )
 	atom ptr = allocate_data( SIZEOF_LXW_DATETIME, cleanup )
 	mem_set( ptr, NULL, SIZEOF_LXW_DATETIME )
 	
-	ifdef MEMSTRUCT then
-		-- easy-peasy!
-		ptr.lxw_datetime = datetime
+	-- not-so-easy!
+	
+	switch length( datetime ) with fallthru do
 		
-	elsedef
-		-- not-so-easy!
+		case 6 then poke_dbl( ptr + lxw_datetime__sec,	 datetime[6] )
+		case 5 then poke_int( ptr + lxw_datetime__min,	 datetime[5] )
+		case 4 then poke_int( ptr + lxw_datetime__hour,	 datetime[4] )
+		case 3 then poke_int( ptr + lxw_datetime__day,	 datetime[3] )
+		case 2 then poke_int( ptr + lxw_datetime__month, datetime[2] )
+		case 1 then poke_int( ptr + lxw_datetime__year,	 datetime[1] )
 		
-		switch length( datetime ) with fallthru do
-			
-			case 6 then poke_dbl( ptr + lxw_datetime__sec,	 datetime[6] )
-			case 5 then poke_int( ptr + lxw_datetime__min,	 datetime[5] )
-			case 4 then poke_int( ptr + lxw_datetime__hour,	 datetime[4] )
-			case 3 then poke_int( ptr + lxw_datetime__day,	 datetime[3] )
-			case 2 then poke_int( ptr + lxw_datetime__month, datetime[2] )
-			case 1 then poke_int( ptr + lxw_datetime__year,	 datetime[1] )
-			
-		end switch
-		
-	end ifdef
+	end switch
 	
 	return ptr
 end function
@@ -828,16 +639,7 @@ end function
  */
 public function allocate_array4( sequence data, atom cleanup = 0 )
 	
-	ifdef MEMSTRUCT then
-		atom size = sizeof( C_UINT ) * (length(data)+1)
-		
---	elsifdef BITS64 then
---		atom size = 8 * (length(data)+1)
-		
-	elsedef
-		atom size = 4 * (length(data)+1)
-		
-	end ifdef
+	atom size = 4 * (length(data)+1)
 	
 	atom ptr = allocate_data( size, cleanup )
 	poke4( ptr, data & {NULL} )
@@ -931,28 +733,14 @@ public function workbook_get_worksheets( atom workbook )
 	
 	sequence result = {}
 	
-	ifdef MEMSTRUCT then
-		
-		atom worksheets = workbook.lxw_workbook.worksheets
-		atom next = worksheets.stailq_head.stqh_first
-		
-		while next != NULL do
-			result = append( result, next )
-			next = next.lxw_worksheet.list_pointers.stqe_next
-		end while
-		
-	elsedef
-		
-		atom worksheets = peek_ptr( workbook + lxw_workbook__worksheets )
-		atom next = peek_ptr( worksheets + stqh_first )
-		
-		while next != NULL do
-			result = append( result, next )
-			next = peek_ptr( next + lxw_worksheet__list_pointers + stqe_next )
-		end while
-		
-	end ifdef
+	atom worksheets = peek_ptr( workbook + lxw_workbook__worksheets )
+	atom next = peek_ptr( worksheets + stqh_first )
 	
+	while next != NULL do
+		result = append( result, next )
+		next = peek_ptr( next + lxw_worksheet__list_pointers + stqe_next )
+	end while
+		
 	return result
 end function
 
